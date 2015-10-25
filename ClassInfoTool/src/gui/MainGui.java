@@ -215,6 +215,7 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 			tableDataList.add(new TableData("Primitive", "" + c.isPrimitive()));
 			tableDataList.add(new TableData("Synthetic", "" + c.isSynthetic()));
 			
+			someInfoLbl.setText("");
 		} catch (Exception e) {
 			displayAlert();
 			System.err.println(e.getMessage());
