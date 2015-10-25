@@ -36,7 +36,7 @@ import javafx.stage.Stage;
 public class MainGui extends Application implements EventHandler<ActionEvent> {
 	TableView<TableData> table;
 	private ObservableList<TableData> tableDataList;
-	TableColumn<TableData, String> userIdTblcol;
+	TableColumn<TableData, String> tblColVal, tblPropColVal;
 
 	private TextField packTxtFld;
 	private Label someInfoLbl;
@@ -54,7 +54,7 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 
 	public void start(Stage stg) throws Exception {
 		BorderPane mainPane = new BorderPane();
-		stg.setTitle("Class Info Tool");
+		stg.setTitle("Class Info Tool: By Mohit Uniyal");
 		Scene sc = new Scene(mainPane, 640, 480);
 		// adding buttons, text field and table to the main interface
 		addGuiComponents(mainPane);
@@ -85,11 +85,11 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		// adding center table
 		addTableToCeter(bp);
 
-		//adding footer components 
+		// adding footer components
 		someInfoLbl = new Label("");
 		HBox bpBottomHb = new HBox();
 		bpBottomHb.setAlignment(Pos.CENTER_RIGHT);
-		bpBottomHb.setPadding(new Insets(0,10,10,0));
+		bpBottomHb.setPadding(new Insets(0, 10, 10, 0));
 		bpBottomHb.getChildren().add(someInfoLbl);
 		someInfoLbl.setStyle("-fx-font-size:15px");
 		bp.setBottom(bpBottomHb);
@@ -102,9 +102,7 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		VBox tableHb = new VBox();
 		tableHb.getChildren().add(table);
 		tableHb.setAlignment(Pos.CENTER);
-
 		tableHb.setPadding(new Insets(10, 10, 5, 10));
-
 		bp.setCenter(tableHb);
 	}
 
@@ -117,6 +115,7 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 
 		packTxtFld = new TextField();
 
+		Button basicInfoBtn = new Button("Basic Info");
 		Button constructorBtn = new Button("Constructors");
 		Button fieldBtn = new Button("Fields");
 		Button methodsBtn = new Button("Methods");
@@ -130,15 +129,15 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 
 		packTxtFld.setPromptText("java.lang.String");
 
-		innerSecHb.getChildren().addAll(packTxtFld, constructorBtn, fieldBtn,
-				methodsBtn);
+		innerSecHb.getChildren().addAll(packTxtFld, basicInfoBtn,
+				constructorBtn, fieldBtn, methodsBtn);
 		outerTopVb.getChildren().add(innerSecHb);
 
 		// setting event handlers
 		constructorBtn.setOnAction(this);
 		fieldBtn.setOnAction(this);
 		methodsBtn.setOnAction(this);
-
+		basicInfoBtn.setOnAction(this);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -151,11 +150,27 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 			packStrName = packTxtFld.getText();
 		}
 
-		table.getColumns().clear();
-		userIdTblcol = new TableColumn<>(buttonTxtStr);
-		userIdTblcol.setCellValueFactory(new PropertyValueFactory<>(
-				"tableColValue"));
-		table.getColumns().addAll(userIdTblcol);
+		// handling basicButton
+		if ("Basic Info".equals(buttonTxtStr)) {
+			table.getColumns().clear();
+
+			tblColVal = new TableColumn<>(buttonTxtStr);
+			tblColVal
+					.setCellValueFactory(new PropertyValueFactory<>("propCol"));
+
+			tblPropColVal = new TableColumn<>("Property");
+			tblPropColVal.setCellValueFactory(new PropertyValueFactory<>(
+					"propColValue"));
+			
+			table.getColumns().addAll(tblColVal, tblPropColVal);
+		} else {
+			//getting particular values like methods, fileds..
+			table.getColumns().clear();
+			tblColVal = new TableColumn<>(buttonTxtStr);
+			tblColVal.setCellValueFactory(new PropertyValueFactory<>(
+					"tableColValue"));
+			table.getColumns().addAll(tblColVal);
+		}
 
 		System.out.println(buttonTxtStr);
 		switch (buttonTxtStr) {
@@ -168,6 +183,41 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		case "Methods":
 			getmethodsData(packStrName);
 			break;
+		case "Basic Info":
+			getClassBasicInfo(packStrName);
+			break;
+		}
+	}
+
+	// added 25-10-2015
+	private void getClassBasicInfo(String packStrName) {
+		try {
+			Class<?> c = Class.forName(packStrName);
+			// empty previous list data and display new values
+			tableDataList.removeAll(tableDataList);
+
+			tableDataList.add(new TableData("Name", c.getName()));
+			tableDataList.add(new TableData("Canonical Name", ""
+					+ c.getCanonicalName()));
+			tableDataList.add(new TableData("Simple Name", ""
+					+ c.getSimpleName()));
+			tableDataList.add(new TableData("Type Name", "" + c.getTypeName()));
+			tableDataList.add(new TableData("Generic String", c
+					.toGenericString()));
+			tableDataList
+					.add(new TableData("Annotation", "" + c.isAnnotation()));
+			tableDataList.add(new TableData("Anonymous Class", ""
+					+ c.isAnonymousClass()));
+			tableDataList.add(new TableData("Enum", "" + c.isEnum()));
+			tableDataList.add(new TableData("Interface", "" + c.isInterface()));
+			tableDataList.add(new TableData("Local Class", "" + c.isLocalClass()));
+			tableDataList.add(new TableData("Member Class", "" + c.isMemberClass()));
+			tableDataList.add(new TableData("Primitive", "" + c.isPrimitive()));
+			tableDataList.add(new TableData("Synthetic", "" + c.isSynthetic()));
+			
+		} catch (Exception e) {
+			displayAlert();
+			System.err.println(e.getMessage());
 		}
 	}
 
@@ -228,6 +278,5 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		alertBox.setTitle("Error Occured!");
 		alertBox.setContentText("Enter Valid Package and Class Name");
 		alertBox.showAndWait();
-
 	}
 }
