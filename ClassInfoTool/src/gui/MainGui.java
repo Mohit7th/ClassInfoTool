@@ -9,10 +9,13 @@ package gui;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import helper.TableData;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -28,12 +31,17 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+enum OtherSelBtn {
+	ALLBTN, PRIBTN, PROBTN, PUBBTN;
+}
 
 public class MainGui extends Application implements EventHandler<ActionEvent> {
 	TableView<TableData> table;
@@ -48,6 +56,7 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		tableDataList = FXCollections.observableArrayList();
 		// to make column expand to table width
 		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+		selRdBtn = OtherSelBtn.ALLBTN;
 	}
 
 	public static void main(String[] args) {
@@ -79,10 +88,10 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		innerFirstHb.setAlignment(Pos.CENTER);
 
 		outerTopVb.getChildren().addAll(innerFirstHb);
-		
-		//26-10-2015
+
+		// 26-10-2015
 		addRadioAndCheckBox(outerTopVb);
-		
+
 		// add buttons
 		addTopVboxEle(outerTopVb);
 
@@ -101,32 +110,62 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		bp.setBottom(bpBottomHb);
 	}
 
-	//adds center controls 
+	OtherSelBtn selRdBtn;
+
+	// adds center controls
 	private void addRadioAndCheckBox(VBox outerTopVb) {
 		RadioButton allRdBtn = new RadioButton("All");
 		RadioButton privateRdBtn = new RadioButton("Private");
 		RadioButton protectedRdBtn = new RadioButton("Protected");
 		RadioButton publicRdBtn = new RadioButton("Public");
-	
-		
+
 		ToggleGroup accessSpecTgGrp = new ToggleGroup();
 
 		allRdBtn.setSelected(true);
-		
-		//toggle group to limit selection of only one button at a time
+
+		// toggle group to limit selection of only one button at a time
 		allRdBtn.setToggleGroup(accessSpecTgGrp);
 		privateRdBtn.setToggleGroup(accessSpecTgGrp);
 		protectedRdBtn.setToggleGroup(accessSpecTgGrp);
 		publicRdBtn.setToggleGroup(accessSpecTgGrp);
-		
+
 		HBox accessSpecHbx = new HBox(10);
-		accessSpecHbx.getChildren().addAll(allRdBtn, privateRdBtn, protectedRdBtn, publicRdBtn);
-		
+		accessSpecHbx.getChildren().addAll(allRdBtn, privateRdBtn,
+				protectedRdBtn, publicRdBtn);
+
 		accessSpecHbx.setAlignment(Pos.CENTER_RIGHT);
-		accessSpecHbx.setPadding(new Insets(10,35,0,0));
-		
+		accessSpecHbx.setPadding(new Insets(10, 35, 0, 0));
+
 		outerTopVb.getChildren().add(accessSpecHbx);
-		
+
+		// handling radio button events
+		accessSpecTgGrp.selectedToggleProperty().addListener(
+				new ChangeListener<Toggle>() {
+
+					public void changed(
+							ObservableValue<? extends Toggle> changed,
+							Toggle oldVal, Toggle newVal) {
+						RadioButton clickedBtn = (RadioButton) newVal;
+						String btnTxt = clickedBtn.getText();
+
+						switch (btnTxt) {
+						case "All":
+							selRdBtn = OtherSelBtn.ALLBTN;
+							break;
+						case "Private":
+							selRdBtn = OtherSelBtn.PRIBTN;
+							break;
+						case "Public":
+							selRdBtn = OtherSelBtn.PUBBTN;
+							break;
+						case "Protected":
+							selRdBtn = OtherSelBtn.PROBTN;
+							break;
+						}
+
+					}
+
+				});
 	}
 
 	// to display all information to the table
@@ -161,17 +200,16 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 			}
 		});
 
-		//a default string that will be displayed on the textfield
+		// a default string that will be displayed on the textfield
 		packTxtFld.setPromptText("java.lang.String");
 
 		innerSecHb.getChildren().addAll(packTxtFld, basicInfoBtn,
 				constructorBtn, fieldBtn, methodsBtn);
 		outerTopVb.getChildren().add(innerSecHb);
 
-		
-		//increasing the size of textField
+		// increasing the size of textField
 		packTxtFld.setPrefWidth(250);
-		
+
 		// setting event handlers
 		constructorBtn.setOnAction(this);
 		fieldBtn.setOnAction(this);
@@ -200,10 +238,10 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 			tblPropColVal = new TableColumn<>("Property");
 			tblPropColVal.setCellValueFactory(new PropertyValueFactory<>(
 					"propColValue"));
-			
+
 			table.getColumns().addAll(tblColVal, tblPropColVal);
 		} else {
-			//getting particular values like methods, fileds..
+			// getting particular values like methods, fileds..
 			table.getColumns().clear();
 			tblColVal = new TableColumn<>(buttonTxtStr);
 			tblColVal.setCellValueFactory(new PropertyValueFactory<>(
@@ -249,11 +287,13 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 					+ c.isAnonymousClass()));
 			tableDataList.add(new TableData("Enum", "" + c.isEnum()));
 			tableDataList.add(new TableData("Interface", "" + c.isInterface()));
-			tableDataList.add(new TableData("Local Class", "" + c.isLocalClass()));
-			tableDataList.add(new TableData("Member Class", "" + c.isMemberClass()));
+			tableDataList.add(new TableData("Local Class", ""
+					+ c.isLocalClass()));
+			tableDataList.add(new TableData("Member Class", ""
+					+ c.isMemberClass()));
 			tableDataList.add(new TableData("Primitive", "" + c.isPrimitive()));
 			tableDataList.add(new TableData("Synthetic", "" + c.isSynthetic()));
-			
+
 			someInfoLbl.setText("");
 		} catch (Exception e) {
 			displayAlert();
@@ -265,13 +305,33 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		try {
 			Class<?> c = Class.forName(packStrName);
 			Constructor<?> cons[] = c.getConstructors();
-			int i = 0;
+			int i = 0, total=0, contMod=0;
 			// empty previous list data and display new values
 			tableDataList.removeAll(tableDataList);
 			for (; i < cons.length; i++) {
-				tableDataList.add(new TableData(cons[i].toString()));
+				contMod = cons[i].getModifiers();
+				
+				if(selRdBtn==OtherSelBtn.ALLBTN){
+					total++;
+					tableDataList.add(new TableData(cons[i].toString()));
+				}else if(selRdBtn==OtherSelBtn.PRIBTN){	
+					if(Modifier.isPrivate(contMod)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}else if(selRdBtn==OtherSelBtn.PROBTN){
+					if(Modifier.isProtected(contMod)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}else{
+					if(Modifier.isPublic(contMod)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}
 			}
-			someInfoLbl.setText("Total Constructor : " + (i));
+			someInfoLbl.setText("Total Constructor : " + (total));
 		} catch (Exception e) {
 			displayAlert();
 			System.err.println(e.getMessage());
@@ -282,13 +342,35 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		try {
 			Class<?> c = Class.forName(packStrName);
 			Field cons[] = c.getFields();
-			int i = 0;
+			
+			int i = 0, fieldVal=0, total=0;
 			// empty previous list data and display new values
 			tableDataList.removeAll(tableDataList);
 			for (; i < cons.length; i++) {
-				tableDataList.add(new TableData(cons[i].toString()));
+				fieldVal = cons[i].getModifiers();
+				
+				if(selRdBtn==OtherSelBtn.ALLBTN){
+					total++;
+					tableDataList.add(new TableData(cons[i].toString()));
+				}else if(selRdBtn==OtherSelBtn.PRIBTN){	
+					if(Modifier.isPrivate(fieldVal)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}else if(selRdBtn==OtherSelBtn.PROBTN){
+					if(Modifier.isProtected(fieldVal)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}else{
+					if(Modifier.isPublic(fieldVal)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}
+					
 			}
-			someInfoLbl.setText("Total Fields : " + (i));
+			someInfoLbl.setText("Total Fields : " + (total));
 		} catch (Exception e) {
 			displayAlert();
 			System.err.println(e.getMessage());
@@ -299,13 +381,35 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		try {
 			Class<?> c = Class.forName(packStrName);
 			Method cons[] = c.getMethods();
-			int i = 0;
+			
+			int i = 0, modifier=0, total=0;
 			// empty previous list data and display new values
 			tableDataList.removeAll(tableDataList);
 			for (; i < cons.length; i++) {
-				tableDataList.add(new TableData(cons[i].toString()));
+				modifier = cons[i].getModifiers();
+				
+				if(selRdBtn==OtherSelBtn.ALLBTN){
+					total++;
+					tableDataList.add(new TableData(cons[i].toString()));
+				}else if(selRdBtn==OtherSelBtn.PRIBTN){	
+					if(Modifier.isPrivate(modifier)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}else if(selRdBtn==OtherSelBtn.PROBTN){
+					if(Modifier.isProtected(modifier)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}else{
+					if(Modifier.isPublic(modifier)){
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
+				}
+					
 			}
-			someInfoLbl.setText("Total Methods : " + (i));
+			someInfoLbl.setText("Total Methods : " + (total));
 		} catch (Exception e) {
 			displayAlert();
 			System.err.println(e.getMessage());
