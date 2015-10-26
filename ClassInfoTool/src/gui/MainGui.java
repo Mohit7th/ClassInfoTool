@@ -23,10 +23,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -77,6 +79,10 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		innerFirstHb.setAlignment(Pos.CENTER);
 
 		outerTopVb.getChildren().addAll(innerFirstHb);
+		
+		//26-10-2015
+		addRadioAndCheckBox(outerTopVb);
+		
 		// add buttons
 		addTopVboxEle(outerTopVb);
 
@@ -95,6 +101,34 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		bp.setBottom(bpBottomHb);
 	}
 
+	//adds center controls 
+	private void addRadioAndCheckBox(VBox outerTopVb) {
+		RadioButton allRdBtn = new RadioButton("All");
+		RadioButton privateRdBtn = new RadioButton("Private");
+		RadioButton protectedRdBtn = new RadioButton("Protected");
+		RadioButton publicRdBtn = new RadioButton("Public");
+	
+		
+		ToggleGroup accessSpecTgGrp = new ToggleGroup();
+
+		allRdBtn.setSelected(true);
+		
+		//toggle group to limit selection of only one button at a time
+		allRdBtn.setToggleGroup(accessSpecTgGrp);
+		privateRdBtn.setToggleGroup(accessSpecTgGrp);
+		protectedRdBtn.setToggleGroup(accessSpecTgGrp);
+		publicRdBtn.setToggleGroup(accessSpecTgGrp);
+		
+		HBox accessSpecHbx = new HBox(10);
+		accessSpecHbx.getChildren().addAll(allRdBtn, privateRdBtn, protectedRdBtn, publicRdBtn);
+		
+		accessSpecHbx.setAlignment(Pos.CENTER_RIGHT);
+		accessSpecHbx.setPadding(new Insets(10,35,0,0));
+		
+		outerTopVb.getChildren().add(accessSpecHbx);
+		
+	}
+
 	// to display all information to the table
 	private void addTableToCeter(BorderPane bp) {
 		table.setItems(tableDataList);
@@ -108,10 +142,10 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 
 	// adding buttons that will be used to display all the class information
 	private void addTopVboxEle(VBox outerTopVb) {
-		HBox innerSecHb = new HBox(10);
+		HBox innerSecHb = new HBox(15);
 
 		innerSecHb.setAlignment(Pos.CENTER);
-		innerSecHb.setPadding(new Insets(20, 0, 0, 0));
+		innerSecHb.setPadding(new Insets(10, 0, 0, 0));
 
 		packTxtFld = new TextField();
 
@@ -123,16 +157,21 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		// set focus to the button
 		Platform.runLater(new Runnable() {
 			public void run() {
-				constructorBtn.requestFocus();
+				basicInfoBtn.requestFocus();
 			}
 		});
 
+		//a default string that will be displayed on the textfield
 		packTxtFld.setPromptText("java.lang.String");
 
 		innerSecHb.getChildren().addAll(packTxtFld, basicInfoBtn,
 				constructorBtn, fieldBtn, methodsBtn);
 		outerTopVb.getChildren().add(innerSecHb);
 
+		
+		//increasing the size of textField
+		packTxtFld.setPrefWidth(250);
+		
 		// setting event handlers
 		constructorBtn.setOnAction(this);
 		fieldBtn.setOnAction(this);
