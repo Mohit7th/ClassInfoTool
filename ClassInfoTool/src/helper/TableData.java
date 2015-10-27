@@ -25,7 +25,6 @@ public class TableData {
 	private StringProperty propCol, propColValue;
 
 	public TableData(String propCol, String propColValue) {
-		System.out.println("yes"+ propCol+" "+propColValue );
 		this.propCol = new SimpleStringProperty(propCol);
 		this.propColValue = new SimpleStringProperty(propColValue);
 	}

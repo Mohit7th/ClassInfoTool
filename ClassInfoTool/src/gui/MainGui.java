@@ -4,6 +4,7 @@
  * 			information (method, field, constructor) of a class
  * Date   : 24-10-2015
  */
+
 package gui;
 
 import java.lang.reflect.Constructor;
@@ -25,6 +26,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
@@ -33,6 +35,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -40,7 +43,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 enum OtherSelBtn {
-	ALLBTN, PRIBTN, PROBTN, PUBBTN;
+	ALLBTN, PRIBTN, PROBTN, PUBBTN, CHECK_BOX_SEL, CHECK_BOX_NOTSEL;
 }
 
 public class MainGui extends Application implements EventHandler<ActionEvent> {
@@ -57,6 +60,7 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		// to make column expand to table width
 		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 		selRdBtn = OtherSelBtn.ALLBTN;
+		selChkBox = OtherSelBtn.CHECK_BOX_NOTSEL;
 	}
 
 	public static void main(String[] args) {
@@ -110,10 +114,11 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		bp.setBottom(bpBottomHb);
 	}
 
-	OtherSelBtn selRdBtn;
+	OtherSelBtn selRdBtn, selChkBox;
 
-	// adds center controls
+	// added radio and checkbox to the top of frame,
 	private void addRadioAndCheckBox(VBox outerTopVb) {
+		CheckBox staticChkBox = new CheckBox("Static");
 		RadioButton allRdBtn = new RadioButton("All");
 		RadioButton privateRdBtn = new RadioButton("Private");
 		RadioButton protectedRdBtn = new RadioButton("Protected");
@@ -123,6 +128,9 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 
 		allRdBtn.setSelected(true);
 
+		// handling Checkbox events
+		staticChkBox.setOnAction(this);
+
 		// toggle group to limit selection of only one button at a time
 		allRdBtn.setToggleGroup(accessSpecTgGrp);
 		privateRdBtn.setToggleGroup(accessSpecTgGrp);
@@ -130,8 +138,8 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 		publicRdBtn.setToggleGroup(accessSpecTgGrp);
 
 		HBox accessSpecHbx = new HBox(10);
-		accessSpecHbx.getChildren().addAll(allRdBtn, privateRdBtn,
-				protectedRdBtn, publicRdBtn);
+		accessSpecHbx.getChildren().addAll(staticChkBox, allRdBtn,
+				privateRdBtn, protectedRdBtn, publicRdBtn);
 
 		accessSpecHbx.setAlignment(Pos.CENTER_RIGHT);
 		accessSpecHbx.setPadding(new Insets(10, 35, 0, 0));
@@ -202,7 +210,8 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 
 		// a default string that will be displayed on the textfield
 		packTxtFld.setPromptText("java.lang.String");
-
+		packTxtFld.setTooltip(new Tooltip("Enter a class name EX - java.lang.reflect.Method"));
+		
 		innerSecHb.getChildren().addAll(packTxtFld, basicInfoBtn,
 				constructorBtn, fieldBtn, methodsBtn);
 		outerTopVb.getChildren().add(innerSecHb);
@@ -219,59 +228,70 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 
 	@SuppressWarnings("unchecked")
 	public void handle(ActionEvent ae) {
-		Button clickedBtn = (Button) ae.getSource();
-		String buttonTxtStr = clickedBtn.getText();
-		String packStrName = "";
-
-		if (!packTxtFld.getText().equals("")) {
-			packStrName = packTxtFld.getText();
-		}
-
-		// handling basicButton
-		if ("Basic Info".equals(buttonTxtStr)) {
-			table.getColumns().clear();
-
-			tblColVal = new TableColumn<>(buttonTxtStr);
-			tblColVal
-					.setCellValueFactory(new PropertyValueFactory<>("propCol"));
-
-			tblPropColVal = new TableColumn<>("Property");
-			tblPropColVal.setCellValueFactory(new PropertyValueFactory<>(
-					"propColValue"));
-
-			table.getColumns().addAll(tblColVal, tblPropColVal);
+		Object obj = ae.getSource();
+		if (obj instanceof CheckBox) {
+			CheckBox tempChkBox = (CheckBox) obj;
+			//selecting and reselecting to checkboxes
+			if(tempChkBox.isSelected())
+				selChkBox = OtherSelBtn.CHECK_BOX_SEL;
+			else
+				selChkBox = OtherSelBtn.CHECK_BOX_NOTSEL;
 		} else {
-			// getting particular values like methods, fileds..
-			table.getColumns().clear();
-			tblColVal = new TableColumn<>(buttonTxtStr);
-			tblColVal.setCellValueFactory(new PropertyValueFactory<>(
-					"tableColValue"));
-			table.getColumns().addAll(tblColVal);
-		}
 
-		System.out.println(buttonTxtStr);
-		switch (buttonTxtStr) {
-		case "Constructors":
-			getConstructorData(packStrName);
-			break;
-		case "Fields":
-			getFieldsData(packStrName);
-			break;
-		case "Methods":
-			getmethodsData(packStrName);
-			break;
-		case "Basic Info":
-			getClassBasicInfo(packStrName);
-			break;
+			Button clickedBtn = (Button) ae.getSource();
+			String buttonTxtStr = clickedBtn.getText();
+			String packStrName = "";
+
+			if (!packTxtFld.getText().equals("")) {
+				packStrName = packTxtFld.getText();
+			}
+
+			// handling basicButton
+			if ("Basic Info".equals(buttonTxtStr)) {
+				table.getColumns().clear();
+
+				tblColVal = new TableColumn<>(buttonTxtStr);
+				tblColVal.setCellValueFactory(new PropertyValueFactory<>(
+						"propCol"));
+
+				tblPropColVal = new TableColumn<>("Property");
+				tblPropColVal.setCellValueFactory(new PropertyValueFactory<>(
+						"propColValue"));
+
+				table.getColumns().addAll(tblColVal, tblPropColVal);
+			} else {
+				// getting particular values like methods, fileds..
+				table.getColumns().clear();
+				tblColVal = new TableColumn<>(buttonTxtStr);
+				tblColVal.setCellValueFactory(new PropertyValueFactory<>(
+						"tableColValue"));
+				table.getColumns().addAll(tblColVal);
+			}
+
+			// System.out.println(buttonTxtStr);
+			switch (buttonTxtStr) {
+			case "Constructors":
+				getConstructorData(packStrName);
+				break;
+			case "Fields":
+				getFieldsData(packStrName);
+				break;
+			case "Methods":
+				getmethodsData(packStrName);
+				break;
+			case "Basic Info":
+				getClassBasicInfo(packStrName);
+				break;
+			}
 		}
 	}
 
 	// added 25-10-2015
 	private void getClassBasicInfo(String packStrName) {
+		// empty previous list data and display new values
+		tableDataList.removeAll(tableDataList);
 		try {
 			Class<?> c = Class.forName(packStrName);
-			// empty previous list data and display new values
-			tableDataList.removeAll(tableDataList);
 
 			tableDataList.add(new TableData("Name", c.getName()));
 			tableDataList.add(new TableData("Canonical Name", ""
@@ -302,30 +322,31 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 	}
 
 	private void getConstructorData(String packStrName) {
+
+		// empty previous list data and display new values
+		tableDataList.removeAll(tableDataList);
 		try {
 			Class<?> c = Class.forName(packStrName);
 			Constructor<?> cons[] = c.getConstructors();
-			int i = 0, total=0, contMod=0;
-			// empty previous list data and display new values
-			tableDataList.removeAll(tableDataList);
+			int i = 0, total = 0, contMod = 0;
 			for (; i < cons.length; i++) {
 				contMod = cons[i].getModifiers();
-				
-				if(selRdBtn==OtherSelBtn.ALLBTN){
+
+				if (selRdBtn == OtherSelBtn.ALLBTN) {
 					total++;
 					tableDataList.add(new TableData(cons[i].toString()));
-				}else if(selRdBtn==OtherSelBtn.PRIBTN){	
-					if(Modifier.isPrivate(contMod)){
+				} else if (selRdBtn == OtherSelBtn.PRIBTN) {
+					if (Modifier.isPrivate(contMod)) {
 						total++;
 						tableDataList.add(new TableData(cons[i].toString()));
 					}
-				}else if(selRdBtn==OtherSelBtn.PROBTN){
-					if(Modifier.isProtected(contMod)){
+				} else if (selRdBtn == OtherSelBtn.PROBTN) {
+					if (Modifier.isProtected(contMod)) {
 						total++;
 						tableDataList.add(new TableData(cons[i].toString()));
 					}
-				}else{
-					if(Modifier.isPublic(contMod)){
+				} else {
+					if (Modifier.isPublic(contMod)) {
 						total++;
 						tableDataList.add(new TableData(cons[i].toString()));
 					}
@@ -339,36 +360,37 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 	}
 
 	private void getFieldsData(String packStrName) {
+
+		// empty previous list data and display new values
+		tableDataList.removeAll(tableDataList);
 		try {
 			Class<?> c = Class.forName(packStrName);
 			Field cons[] = c.getFields();
-			
-			int i = 0, fieldVal=0, total=0;
-			// empty previous list data and display new values
-			tableDataList.removeAll(tableDataList);
+
+			int i = 0, fieldVal = 0, total = 0;
 			for (; i < cons.length; i++) {
 				fieldVal = cons[i].getModifiers();
-				
-				if(selRdBtn==OtherSelBtn.ALLBTN){
+
+				if (selRdBtn == OtherSelBtn.ALLBTN) {
 					total++;
 					tableDataList.add(new TableData(cons[i].toString()));
-				}else if(selRdBtn==OtherSelBtn.PRIBTN){	
-					if(Modifier.isPrivate(fieldVal)){
+				} else if (selRdBtn == OtherSelBtn.PRIBTN) {
+					if (Modifier.isPrivate(fieldVal)) {
 						total++;
 						tableDataList.add(new TableData(cons[i].toString()));
 					}
-				}else if(selRdBtn==OtherSelBtn.PROBTN){
-					if(Modifier.isProtected(fieldVal)){
+				} else if (selRdBtn == OtherSelBtn.PROBTN) {
+					if (Modifier.isProtected(fieldVal)) {
 						total++;
 						tableDataList.add(new TableData(cons[i].toString()));
 					}
-				}else{
-					if(Modifier.isPublic(fieldVal)){
+				} else {
+					if (Modifier.isPublic(fieldVal)) {
 						total++;
 						tableDataList.add(new TableData(cons[i].toString()));
 					}
 				}
-					
+
 			}
 			someInfoLbl.setText("Total Fields : " + (total));
 		} catch (Exception e) {
@@ -389,8 +411,15 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 				modifier = cons[i].getModifiers();
 				
 				if(selRdBtn==OtherSelBtn.ALLBTN){
-					total++;
-					tableDataList.add(new TableData(cons[i].toString()));
+					if(selChkBox==OtherSelBtn.CHECK_BOX_SEL){
+						if(Modifier.isStatic(modifier)){
+							total++;
+							tableDataList.add(new TableData(cons[i].toString()));
+						}
+					}else{
+						total++;
+						tableDataList.add(new TableData(cons[i].toString()));
+					}
 				}else if(selRdBtn==OtherSelBtn.PRIBTN){	
 					if(Modifier.isPrivate(modifier)){
 						total++;
@@ -403,8 +432,15 @@ public class MainGui extends Application implements EventHandler<ActionEvent> {
 					}
 				}else{
 					if(Modifier.isPublic(modifier)){
-						total++;
-						tableDataList.add(new TableData(cons[i].toString()));
+						if(selChkBox==OtherSelBtn.CHECK_BOX_SEL){
+							if(Modifier.isStatic(modifier)){
+								total++;
+								tableDataList.add(new TableData(cons[i].toString()));
+							}
+						}else{
+							total++;
+							tableDataList.add(new TableData(cons[i].toString()));
+						}
 					}
 				}
 					
